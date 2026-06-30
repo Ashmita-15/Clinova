@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    @apply bg-slate-50 text-slate-800 antialiased selection:bg-primary-500/20 selection:text-primary-900;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    @apply font-bold tracking-tight text-slate-900;
+  }
+}
+
+/* Custom premium styles */
+.glass-card {
+  @apply bg-white/70 backdrop-blur-md border border-white/40 shadow-xl shadow-slate-100/50;
+}
+
+.clinical-badge {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide border;
+}
