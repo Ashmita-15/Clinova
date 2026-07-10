@@ -12,6 +12,16 @@ export async function analyzeAssessment(data) {
   return res.data
 }
 
+export async function analyzeBulkAssessments(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await client.post('/api/assessment/analyze-bulk', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  })
+  return res.data
+}
+
+
 export async function getAssessment(id) {
   const res = await client.get(`/api/assessment/${id}`)
   return res.data

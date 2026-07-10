@@ -1,7 +1,9 @@
 import json
+import io
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException
+import pandas as pd
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -229,3 +231,222 @@ def download_report(assessment_id: int, db: Session = Depends(get_db)):
         media_type="application/pdf",
         filename=f"health_assessment_{assessment_id}.pdf",
     )
+
+
+@router.post("/analyze-bulk", response_model=list[AssessmentResponse])
+def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends(get_db)):
+    contents = file.file.read()
+    filename = file.filename.lower()
+
+    try:
+        if filename.endswith(".csv"):
+            df = pd.read_csv(io.BytesIO(contents))
+        elif filename.endswith((".xls", ".xlsx")):
+            df = pd.read_excel(io.BytesIO(contents))
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Unsupported file format. Please upload a CSV or Excel file.",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse file: {str(e)}")
+
+    # Normalize column names: lowercase, strip, replace spaces/underscores
+    normalized_cols = {}
+    for col in df.columns:
+        norm = str(col).lower().strip().replace(" ", "").replace("_", "")
+        normalized_cols[norm] = col
+
+    column_mappings = {
+        "name": ["name", "patientname", "fullname", "patient"],
+        "age": ["age"],
+        "gender": ["gender", "sex"],
+        "hemoglobin": ["hemoglobin", "hemo", "hb"],
+        "mcv": ["mcv"],
+        "mch": ["mch"],
+        "mchc": ["mchc"],
+        "rbc": ["rbc"],
+        "wbc": ["wbc"],
+        "platelets": ["platelets"],
+        "blood_urea": ["bloodurea", "bu", "blood_urea"],
+        "serum_creatinine": ["serumcreatinine", "sc", "serum_creatinine"],
+        "glucose": ["glucose"],
+        "bmi": ["bmi"],
+        "blood_pressure": ["bloodpressure", "bp", "blood_pressure"],
+        "insulin": ["insulin"],
+    }
+
+    mapped_columns = {}
+    for target, aliases in column_mappings.items():
+        for alias in aliases:
+            norm_alias = alias.replace("_", "").lower()
+            if norm_alias in normalized_cols:
+                mapped_columns[target] = normalized_cols[norm_alias]
+                break
+
+    compulsory_keys = ["name", "age", "gender", "hemoglobin", "mcv", "mch", "mchc"]
+    missing_compulsory = [k for k in compulsory_keys if k not in mapped_columns]
+    if missing_compulsory:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Missing compulsory columns: {', '.join(missing_compulsory)}. Please check your spreadsheet headers.",
+        )
+
+    results = []
+
+    for index, row in df.iterrows():
+        row_num = index + 2  # Row index in Excel/CSV is 1-based + 1 for header
+        try:
+            raw_name = str(row[mapped_columns["name"]]).strip()
+            if not raw_name or pd.isna(row[mapped_columns["name"]]):
+                raw_name = f"Patient {index + 1}"
+
+            raw_age = row[mapped_columns["age"]]
+            if pd.isna(raw_age):
+                raise ValueError("Age is missing")
+            age = int(float(raw_age))
+            if age < 1 or age > 120:
+                raise ValueError(f"Age {age} must be between 1 and 120")
+
+            raw_gender = str(row[mapped_columns["gender"]]).strip().lower()
+            if raw_gender in ("male", "m"):
+                gender = "Male"
+            elif raw_gender in ("female", "f"):
+                gender = "Female"
+            else:
+                gender = "Other"
+
+            # Compulsory blood parameters
+            hemoglobin = float(row[mapped_columns["hemoglobin"]])
+            mcv = float(row[mapped_columns["mcv"]])
+            mch = float(row[mapped_columns["mch"]])
+            mchc = float(row[mapped_columns["mchc"]])
+
+            if not (0 <= hemoglobin <= 25):
+                raise ValueError(f"Hemoglobin value {hemoglobin} out of range [0, 25]")
+            if not (0 <= mcv <= 150):
+                raise ValueError(f"MCV value {mcv} out of range [0, 150]")
+            if not (0 <= mch <= 50):
+                raise ValueError(f"MCH value {mch} out of range [0, 50]")
+            if not (0 <= mchc <= 50):
+                raise ValueError(f"MCHC value {mchc} out of range [0, 50]")
+
+            # Optional blood parameters helper
+            def get_optional_float(key, min_val, max_val):
+                if key in mapped_columns:
+                    val = row[mapped_columns[key]]
+                    if not pd.isna(val):
+                        f_val = float(val)
+                        if min_val <= f_val <= max_val:
+                            return f_val
+                return None
+
+            rbc = get_optional_float("rbc", 0, 10)
+            wbc = get_optional_float("wbc", 0, 50000)
+            platelets = get_optional_float("platelets", 0, 1000000)
+            blood_urea = get_optional_float("blood_urea", 0, 300)
+            serum_creatinine = get_optional_float("serum_creatinine", 0, 20)
+            glucose = get_optional_float("glucose", 0, 500)
+            bmi = get_optional_float("bmi", 5, 80)
+            blood_pressure = get_optional_float("blood_pressure", 40, 250)
+            insulin = get_optional_float("insulin", 0, 1000)
+
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Row {row_num}: validation failed: {str(e)}",
+            )
+
+        # Assemble blood dictionary for predictions
+        blood_dict = {
+            "hemoglobin": hemoglobin,
+            "mcv": mcv,
+            "mch": mch,
+            "mchc": mchc,
+            "rbc": rbc,
+            "wbc": wbc,
+            "platelets": platelets,
+            "blood_urea": blood_urea,
+            "serum_creatinine": serum_creatinine,
+            "glucose": glucose,
+            "bmi": bmi,
+            "blood_pressure": blood_pressure,
+            "insulin": insulin,
+        }
+
+        # Run predictions
+        try:
+            anemia_cat, anemia_proba, anemia_feats = ml_service.predict_anemia(
+                gender, blood_dict
+            )
+            kidney_cat, kidney_proba, kidney_feats = ml_service.predict_kidney(
+                age, blood_dict
+            )
+            diabetes_cat, diabetes_proba, diabetes_feats = ml_service.predict_diabetes(
+                age, blood_dict
+            )
+        except FileNotFoundError as e:
+            raise HTTPException(status_code=503, detail=str(e))
+
+        anemia_imp = ml_service.get_feature_importance("anemia")
+        kidney_imp = ml_service.get_feature_importance("ckd")
+        diabetes_imp = ml_service.get_feature_importance("diabetes")
+
+        anemia_factors = explain_anemia(gender, anemia_feats, anemia_imp)
+        kidney_factors = explain_kidney(age, kidney_feats, kidney_imp)
+        diabetes_factors = explain_diabetes(age, diabetes_feats, diabetes_imp)
+
+        tests = get_test_recommendations(anemia_cat, kidney_cat, diabetes_cat)
+        suggestions = get_health_suggestions(anemia_cat, kidney_cat, diabetes_cat)
+
+        db_assessment = Assessment(
+            patient_name=raw_name,
+            age=age,
+            gender=gender,
+            hemoglobin=hemoglobin,
+            rbc=rbc,
+            wbc=wbc,
+            platelets=platelets,
+            mcv=mcv,
+            mch=mch,
+            mchc=mchc,
+            blood_urea=blood_urea,
+            serum_creatinine=serum_creatinine,
+            glucose=glucose,
+            bmi=bmi,
+            blood_pressure=blood_pressure,
+            insulin=insulin,
+            anemia_risk=anemia_cat,
+            anemia_probability=anemia_proba,
+            kidney_risk=kidney_cat,
+            kidney_probability=kidney_proba,
+            diabetes_risk=diabetes_cat,
+            diabetes_probability=diabetes_proba,
+            explanations=json.dumps(
+                {
+                    "anemia": anemia_factors,
+                    "kidney": kidney_factors,
+                    "diabetes": diabetes_factors,
+                }
+            ),
+            recommended_tests=json.dumps([t.model_dump() for t in tests]),
+            health_suggestions=json.dumps(suggestions),
+        )
+        db.add(db_assessment)
+        db.commit()
+        db.refresh(db_assessment)
+
+        results.append(
+            _build_response(
+                db_assessment,
+                anemia_factors,
+                kidney_factors,
+                diabetes_factors,
+                tests,
+                suggestions,
+            )
+        )
+
+    return results

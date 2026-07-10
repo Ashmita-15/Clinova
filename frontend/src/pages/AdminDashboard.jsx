@@ -97,6 +97,26 @@ export default function AdminDashboard() {
         <ChartCard title="Diabetes Risk Distribution" data={diabetesData} />
       </div>
 
+      {/* Age-Risk Distribution stacked chart */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm mb-10">
+        <h2 className="text-lg font-semibold text-slate-800 mb-4">Age-Risk Distribution</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <BarChart
+            data={stats.age_risk_distribution}
+            margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <XAxis dataKey="age_group" tick={{ fontSize: 13 }} />
+            <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+            <Tooltip formatter={(value, name) => [value, `${name} Risk`]} />
+            <Legend />
+            <Bar dataKey="Low" stackId="risk" fill="#10b981" />
+            <Bar dataKey="Medium" stackId="risk" fill="#f59e0b" />
+            <Bar dataKey="High" stackId="risk" fill="#ef4444" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
       {/* Bar chart comparison */}
       <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm mb-10">
         <h2 className="text-lg font-semibold text-slate-800 mb-4">Risk Category Comparison</h2>

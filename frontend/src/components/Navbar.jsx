@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
-import { Activity, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import logo from '../assets/logo.jpg'
 
 const links = [
   { to: '/', label: 'Home' },
@@ -17,9 +18,11 @@ export default function Navbar() {
     <nav className="bg-white/95 backdrop-blur-sm border-b border-slate-100 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <Link to="/" className="flex items-center gap-2 text-primary-800 font-bold text-lg">
-            <Activity className="w-7 h-7 text-primary-600" />
-            <span>HealthRisk AI</span>
+          <Link to="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity duration-200">
+            <div className="w-9 h-9 rounded-xl overflow-hidden border border-slate-100 shadow-sm flex items-center justify-center bg-white shrink-0">
+              <img src={logo} alt="Clinova Logo" className="w-full h-full object-cover" />
+            </div>
+            <span className="font-extrabold text-slate-800 tracking-tight text-xl">Clinova</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-1">

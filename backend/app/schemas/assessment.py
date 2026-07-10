@@ -81,4 +81,5 @@ class AdminStats(BaseModel):
     anemia_distribution: dict[str, int]
     kidney_distribution: dict[str, int]
     diabetes_distribution: dict[str, int]
+    age_risk_distribution: list[dict]
     recent_assessments: list[dict]

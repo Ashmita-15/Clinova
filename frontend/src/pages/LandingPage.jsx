@@ -10,7 +10,7 @@ import {
   Mail,
   MapPin,
 } from 'lucide-react'
-import doctorsImage from '../assets/pp.png' // Import the doctors image
+import doctorsImage from '../assets/pp.jpeg' // Import the doctors image
 
 const features = [
   {
