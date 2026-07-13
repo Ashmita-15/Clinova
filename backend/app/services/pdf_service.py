@@ -91,7 +91,7 @@ def generate_pdf_report(assessment: AssessmentResponse) -> str:
 
     story.append(Paragraph("Entered Blood Test Parameters", heading))
     clinical_data = [
-        ["Haemoglobin", fmt(assessment.blood.haemoglobin, "g/dL"), "MCV", fmt(assessment.blood.mcv, "fL")],
+        ["Hemoglobin", fmt(assessment.blood.hemoglobin, "g/dL"), "MCV", fmt(assessment.blood.mcv, "fL")],
         ["MCH", fmt(assessment.blood.mch, "pg"), "MCHC", fmt(assessment.blood.mchc, "g/dL")],
         ["RBC", fmt(assessment.blood.rbc, "million/µL"), "WBC", fmt(assessment.blood.wbc, "cells/µL")],
         ["Platelets", fmt(assessment.blood.platelets, "/µL"), "Blood Urea", fmt(assessment.blood.blood_urea, "mg/dL")],
