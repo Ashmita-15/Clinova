@@ -29,11 +29,13 @@ const initialPatient = { name: '', age: '', gender: 'Male' }
 const initialBlood = {
   hemoglobin: '',
   rbc: '',
-  wbc: '',
-  platelets: '',
+  hematocrit: '',
   mcv: '',
   mch: '',
   mchc: '',
+  rdw: '',
+  wbc: '',
+  platelets: '',
   blood_urea: '',
   serum_creatinine: '',
   glucose: '',
@@ -120,17 +122,33 @@ export default function AssessmentForm() {
         },
         blood: {
           hemoglobin: parseFloat(blood.hemoglobin),
-          rbc: blood.rbc ? parseFloat(blood.rbc) : null,
-          wbc: blood.wbc ? parseFloat(blood.wbc) : null,
-          platelets: blood.platelets ? parseFloat(blood.platelets) : null,
+
+          rbc: parseFloat(blood.rbc),
+          
+          hematocrit: parseFloat(blood.hematocrit),
+          
           mcv: parseFloat(blood.mcv),
+          
           mch: parseFloat(blood.mch),
+          
           mchc: parseFloat(blood.mchc),
+          
+          rdw: parseFloat(blood.rdw),
+          
+          wbc: blood.wbc ? parseFloat(blood.wbc) : null,
+          
+          platelets: blood.platelets ? parseFloat(blood.platelets) : null,
+          
           blood_urea: blood.blood_urea ? parseFloat(blood.blood_urea) : null,
+          
           serum_creatinine: blood.serum_creatinine ? parseFloat(blood.serum_creatinine) : null,
+          
           glucose: blood.glucose ? parseFloat(blood.glucose) : null,
+          
           bmi: blood.bmi ? parseFloat(blood.bmi) : null,
+          
           blood_pressure: blood.blood_pressure ? parseFloat(blood.blood_pressure) : null,
+          
           insulin: blood.insulin ? parseFloat(blood.insulin) : null,
         },
       }
@@ -201,15 +219,70 @@ export default function AssessmentForm() {
   }
 
   const downloadTemplateCSV = () => {
-    const headers = [
-      "patient_name", "age", "gender", "hemoglobin", "mcv", "mch", "mchc",
-      "rbc", "wbc", "platelets", "blood_urea", "serum_creatinine", "glucose",
-      "bmi", "blood_pressure", "insulin"
-    ]
+    const headers = ["patient_name","age","gender","hemoglobin","rbc","hematocrit","mcv", "mch","mchc","rdw","wbc", "platelets", "blood_urea","serum_creatinine","glucose","bmi", "blood_pressure","insulin"]
     const rows = [
-      ["John Doe", "45", "Male", "14.2", "89", "30", "33", "4.5", "7500", "250000", "24", "0.9", "98", "23.5", "120", "80"],
-      ["Jane Smith", "29", "Female", "11.5", "78", "24", "31", "3.8", "6200", "280000", "18", "0.7", "85", "21.2", "115", ""],
-      ["Alex Brown", "62", "Other", "13.8", "92", "31", "34", "", "", "", "45", "1.4", "140", "28.1", "135", "120"]
+      [
+      "John Doe",
+      "45",
+      "Male",
+      "14.2",
+      "4.8",
+      "42",
+      "89",
+      "30",
+      "33",
+      "13.5",
+      "7500",
+      "250000",
+      "24",
+      "0.9",
+      "98",
+      "23.5",
+      "120",
+      "80"
+      ],
+      
+      [
+      "Jane Smith",
+      "29",
+      "Female",
+      "11.5",
+      "3.8",
+      "36",
+      "78",
+      "24",
+      "31",
+      "15.2",
+      "6200",
+      "280000",
+      "18",
+      "0.7",
+      "85",
+      "21.2",
+      "115",
+      ""
+      ],
+      
+      [
+      "Alex Brown",
+      "62",
+      "Other",
+      "13.8",
+      "4.6",
+      "41",
+      "92",
+      "31",
+      "34",
+      "12.8",
+      "",
+      "",
+      "45",
+      "1.4",
+      "140",
+      "28.1",
+      "135",
+      "120"
+      ]
     ]
     const csvContent = "data:text/csv;charset=utf-8," 
       + [headers.join(","), ...rows.map(r => r.join(","))].join("\n")
@@ -410,9 +483,12 @@ export default function AssessmentForm() {
                     </div>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-2 gap-6">
                       <Field label="Hemoglobin (g/dL)" name="hemoglobin" value={blood.hemoglobin} onChange={handleBlood} placeholder="13.5" />
+                      <Field label="RBC (million/µL)" name="rbc" value={blood.rbc} onChange={handleBlood} placeholder="4.8"/>
                       <Field label="MCV (fL)" name="mcv" value={blood.mcv} onChange={handleBlood} placeholder="90" />
                       <Field label="MCH (pg)" name="mch" value={blood.mch} onChange={handleBlood} placeholder="29" />
                       <Field label="MCHC (g/dL)" name="mchc" value={blood.mchc} onChange={handleBlood} placeholder="33" />
+                      <Field label="RDW (%)" name="rdw" value={blood.rdw} onChange={handleBlood} placeholder="13.5"/>
+                      <Field label="PCV(%)" name="hematocrit" value={blood.hematocrit} onChange={handleBlood} placeholder="42"/>
                     </div>
                   </div>
 
@@ -425,7 +501,6 @@ export default function AssessmentForm() {
                       <span className="h-[1px] bg-slate-100 flex-grow" />
                     </div>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                      <Field label="RBC (million/µL)" name="rbc" value={blood.rbc} onChange={handleBlood} placeholder="4.8" required={false} />
                       <Field label="WBC (cells/µL)" name="wbc" value={blood.wbc} onChange={handleBlood} placeholder="7500" required={false} />
                       <Field label="Platelets (/µL)" name="platelets" value={blood.platelets} onChange={handleBlood} placeholder="250000" required={false} />
                       <Field label="Blood Urea (mg/dL)" name="blood_urea" value={blood.blood_urea} onChange={handleBlood} placeholder="25" required={false} />
@@ -641,7 +716,7 @@ export default function AssessmentForm() {
                           Required Columns
                         </span>
                         <p className="text-[11px] font-mono text-slate-600 mt-1">
-                          patient_name, age, gender, hemoglobin, mcv, mch, mchc
+                          patient_name, age, gender, hemoglobin, rbc, hematocrit, mcv, mch, mchc, rdw
                         </p>
                       </div>
                       <div>
@@ -649,7 +724,7 @@ export default function AssessmentForm() {
                           Optional Columns
                         </span>
                         <p className="text-[11px] font-mono text-slate-500 mt-1">
-                          rbc, wbc, platelets, blood_urea, serum_creatinine, glucose, bmi, blood_pressure, insulin
+                          wbc, platelets, blood_urea, serum_creatinine, glucose, bmi, blood_pressure, insulin
                         </p>
                       </div>
                     </div>

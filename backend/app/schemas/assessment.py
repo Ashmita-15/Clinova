@@ -9,33 +9,65 @@ class PatientInput(BaseModel):
 
 class BloodParameters(BaseModel):
     hemoglobin: float = Field(..., ge=0, le=25)
+
+    rbc: float = Field(..., ge=0, le=10)
+
+    hematocrit: float = Field(..., ge=0, le=70)
+
     mcv: float = Field(..., ge=0, le=150)
+
     mch: float = Field(..., ge=0, le=50)
+
     mchc: float = Field(..., ge=0, le=50)
-    rbc: float | None = Field(default=None, ge=0, le=10)
+
+    rdw: float = Field(..., ge=0, le=40)
+
     wbc: float | None = Field(default=None, ge=0, le=50000)
+
     platelets: float | None = Field(default=None, ge=0, le=1000000)
+
     blood_urea: float | None = Field(default=None, ge=0, le=300)
+
     serum_creatinine: float | None = Field(default=None, ge=0, le=20)
+
     glucose: float | None = Field(default=None, ge=0, le=500)
+
     bmi: float | None = Field(default=None, ge=5, le=80)
+
     blood_pressure: float | None = Field(default=None, ge=40, le=250)
+
     insulin: float | None = Field(default=None, ge=0, le=1000)
 
 
 class BloodParametersResponse(BaseModel):
     hemoglobin: float
+
+    rbc: float
+
+    hematocrit: float
+
     mcv: float
+
     mch: float
+
     mchc: float
-    rbc: float | None = None
+
+    rdw: float
+
     wbc: float | None = None
+
     platelets: float | None = None
+
     blood_urea: float | None = None
+
     serum_creatinine: float | None = None
+
     glucose: float | None = None
+
     bmi: float | None = None
+
     blood_pressure: float | None = None
+
     insulin: float | None = None
 
 

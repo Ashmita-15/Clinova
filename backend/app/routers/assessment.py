@@ -49,6 +49,8 @@ def _build_response(
             mch=db_assessment.mch,
             mchc=db_assessment.mchc,
             rbc=db_assessment.rbc,
+            hematocrit=db_assessment.hematocrit,
+            rdw=db_assessment.rdw,
             wbc=db_assessment.wbc,
             platelets=db_assessment.platelets,
             blood_urea=db_assessment.blood_urea,
@@ -143,11 +145,13 @@ def analyze_assessment(request: AssessmentRequest, db: Session = Depends(get_db)
         gender=patient.gender,
         hemoglobin=blood["hemoglobin"],
         rbc=blood["rbc"],
-        wbc=blood["wbc"],
-        platelets=blood["platelets"],
+        hematocrit=blood["hematocrit"],
         mcv=blood["mcv"],
         mch=blood["mch"],
         mchc=blood["mchc"],
+        rdw=blood["rdw"],
+        wbc=blood["wbc"],
+        platelets=blood["platelets"],
         blood_urea=blood["blood_urea"],
         serum_creatinine=blood["serum_creatinine"],
         glucose=blood["glucose"],
@@ -276,6 +280,8 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
         "bmi": ["bmi"],
         "blood_pressure": ["bloodpressure", "bp", "blood_pressure"],
         "insulin": ["insulin"],
+        "hematocrit": ["hematocrit", "hct", "pcv"],
+        "rdw": ["rdw"],
     }
 
     mapped_columns = {}
@@ -286,7 +292,7 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
                 mapped_columns[target] = normalized_cols[norm_alias]
                 break
 
-    compulsory_keys = ["name", "age", "gender", "hemoglobin", "mcv", "mch", "mchc"]
+    compulsory_keys = ["name","age","gender","hemoglobin","rbc","hematocrit","mcv","mch","mchc","rdw",]
     missing_compulsory = [k for k in compulsory_keys if k not in mapped_columns]
     if missing_compulsory:
         raise HTTPException(
@@ -362,10 +368,12 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
         # Assemble blood dictionary for predictions
         blood_dict = {
             "hemoglobin": hemoglobin,
+            "rbc": rbc,
+            "hematocrit": hematocrit,
             "mcv": mcv,
             "mch": mch,
             "mchc": mchc,
-            "rbc": rbc,
+            "rdw": rdw,
             "wbc": wbc,
             "platelets": platelets,
             "blood_urea": blood_urea,

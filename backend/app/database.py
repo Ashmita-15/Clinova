@@ -21,11 +21,13 @@ class Assessment(Base):
 
     hemoglobin = Column(Float)
     rbc = Column(Float)
+    hematocrit = Column(Float)      
     wbc = Column(Float)
     platelets = Column(Float)
     mcv = Column(Float)
     mch = Column(Float)
     mchc = Column(Float)
+    rdw = Column(Float)  
     blood_urea = Column(Float)
     serum_creatinine = Column(Float)
     glucose = Column(Float)

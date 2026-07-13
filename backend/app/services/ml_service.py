@@ -26,6 +26,7 @@ class MLService:
     def __init__(self):
         self.models_path = _resolve_models_path()
         self._artifacts: dict = {}
+        self._scalers: dict = {}
 
     def _load(self, name: str) -> dict:
         if name not in self._artifacts:
@@ -36,6 +37,18 @@ class MLService:
                 )
             self._artifacts[name] = joblib.load(path)
         return self._artifacts[name]
+    
+    def _load_scaler(self, name: str):
+        if name not in self._scalers:
+
+            path = os.path.join(
+                elf.models_path,
+                f"{name}_scaler.pkl"
+            )
+
+            self._scalers[name] = joblib.load(path)
+
+        return self._scalers[name]
 
     @staticmethod
     def probability_to_category(proba: float) -> str:
@@ -46,18 +59,41 @@ class MLService:
         return "High"
 
     def predict_anemia(self, gender: str, blood: dict) -> tuple[str, float, dict]:
+    # Load model artifact and scaler
         artifact = self._load("anemia")
+        scaler = self._load_scaler("anemia")
+
+        # Encode gender
         gender_val = 1 if gender.lower() in ("male", "m") else 0
+
+        # Build input row
         row = {
-            "Gender": gender_val,
-            "Hemoglobin": blood["hemoglobin"],
+            "GENDER": gender_val,
+            "HGB": blood["hemoglobin"],
+            "RBC": blood["rbc"],
+            "HCT": blood["hematocrit"],
+            "MCV": blood["mcv"],
             "MCH": blood["mch"],
             "MCHC": blood["mchc"],
-            "MCV": blood["mcv"],
+            "RDW": blood["rdw"],
         }
-        X = pd.DataFrame([row])[artifact["features"]]
-        proba = float(artifact["model"].predict_proba(X)[0][1])
+
+        # Create DataFrame
+        X = pd.DataFrame([row])
+
+        # Ensure feature order matches training
+        X = X[artifact["features"]]
+
+        # Scale features
+        X_scaled = scaler.transform(X)
+
+        # Predict
+        model = artifact["model"]
+        proba = float(model.predict_proba(X_scaled)[0][1])
+
+        # Convert probability to category
         category = self.probability_to_category(proba)
+
         return category, proba, row
 
     def predict_kidney(self, age: int, blood: dict) -> tuple[str, float, dict]:
