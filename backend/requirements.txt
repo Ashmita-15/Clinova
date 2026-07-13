@@ -5,11 +5,12 @@ psycopg2-binary==2.9.10
 python-dotenv==1.0.1
 pydantic==2.10.3
 pydantic-settings==2.7.0
-numpy==1.26.4
 pandas==2.2.2
+numpy==2.0.2
 scikit-learn==1.6.1
-scipy==1.13.1
-joblib==1.4.2
+scipy==1.16.3
+joblib==1.5.3
+imbalanced-learn==0.13.0
 imbalanced-learn==0.13.0
 reportlab==4.2.5
 python-multipart==0.0.20
