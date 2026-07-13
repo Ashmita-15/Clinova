@@ -324,20 +324,35 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
             else:
                 gender = "Other"
 
-            # Compulsory blood parameters
+           # Compulsory blood parameters
             hemoglobin = float(row[mapped_columns["hemoglobin"]])
+            rbc = float(row[mapped_columns["rbc"]])
+            hematocrit = float(row[mapped_columns["hematocrit"]])
             mcv = float(row[mapped_columns["mcv"]])
             mch = float(row[mapped_columns["mch"]])
             mchc = float(row[mapped_columns["mchc"]])
+            rdw = float(row[mapped_columns["rdw"]])
 
             if not (0 <= hemoglobin <= 25):
                 raise ValueError(f"Hemoglobin value {hemoglobin} out of range [0, 25]")
+
+            if not (0 <= rbc <= 10):
+                raise ValueError(f"RBC value {rbc} out of range [0, 10]")
+
+            if not (0 <= hematocrit <= 70):
+                raise ValueError(f"Hematocrit value {hematocrit} out of range [0, 70]")
+
             if not (0 <= mcv <= 150):
                 raise ValueError(f"MCV value {mcv} out of range [0, 150]")
+
             if not (0 <= mch <= 50):
                 raise ValueError(f"MCH value {mch} out of range [0, 50]")
+
             if not (0 <= mchc <= 50):
                 raise ValueError(f"MCHC value {mchc} out of range [0, 50]")
+
+            if not (0 <= rdw <= 40):
+                raise ValueError(f"RDW value {rdw} out of range [0, 40]")
 
             # Optional blood parameters helper
             def get_optional_float(key, min_val, max_val):
@@ -349,7 +364,7 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
                             return f_val
                 return None
 
-            rbc = get_optional_float("rbc", 0, 10)
+
             wbc = get_optional_float("wbc", 0, 50000)
             platelets = get_optional_float("platelets", 0, 1000000)
             blood_urea = get_optional_float("blood_urea", 0, 300)
@@ -415,11 +430,13 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
             gender=gender,
             hemoglobin=hemoglobin,
             rbc=rbc,
+            hematocrit=hematocrit,
             wbc=wbc,
             platelets=platelets,
             mcv=mcv,
             mch=mch,
             mchc=mchc,
+            rdw=rdw,
             blood_urea=blood_urea,
             serum_creatinine=serum_creatinine,
             glucose=glucose,
