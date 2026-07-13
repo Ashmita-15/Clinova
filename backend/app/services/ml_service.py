@@ -42,7 +42,7 @@ class MLService:
         if name not in self._scalers:
 
             path = os.path.join(
-                elf.models_path,
+                self.models_path,
                 f"{name}_scaler.pkl"
             )
 
