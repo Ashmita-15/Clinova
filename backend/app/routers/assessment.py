@@ -127,7 +127,6 @@ def analyze_assessment(request: AssessmentRequest, db: Session = Depends(get_db)
     except FileNotFoundError as e:
         raise HTTPException(status_code=503, detail=str(e))
 
-    anemia_imp = ml_service.get_feature_importance("anemia")
     kidney_imp = ml_service.get_feature_importance("ckd")
     diabetes_imp = ml_service.get_feature_importance("diabetes")
 

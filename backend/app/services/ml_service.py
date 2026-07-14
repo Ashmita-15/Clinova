@@ -60,33 +60,33 @@ class MLService:
 
     def predict_anemia(self,gender: str,age: int,blood: dict) -> tuple[str, float, dict]:
 
-        model = self._load("anemia")
-        scaler = self._load_scaler("anemia")
+    model = self._load("anemia")
+    scaler = self._load_scaler("anemia")
 
-        gender_val = 1 if gender.lower() in ("male", "m") else 0
+    gender_val = 1 if gender.lower() in ("male", "m") else 0
 
-        row = pd.DataFrame([{
-            "Gender": gender_val,
-            "Age": age,
-            "HGB(Hemoglobin)": blood["hemoglobin"],
-            "RBC": blood["rbc"],
-            "PCV/HCT": blood["pcv"],
-            "MCV": blood["mcv"],
-            "MCH": blood["mch"],
-            "MCHC": blood["mchc"],
-        }])
+    row = pd.DataFrame([{
+        "Gender": gender_val,
+        "Age": age,
+        "HGB(Hemoglobin)": blood["hemoglobin"],
+        "RBC": blood["rbc"],
+        "PCV/HCT": blood["pcv"],
+        "MCV": blood["mcv"],
+        "MCH": blood["mch"],
+        "MCHC": blood["mchc"],
+    }])
 
-        X_scaled = scaler.transform(row)
+    X_scaled = scaler.transform(row)
 
-        proba = float(model.predict_proba(X_scaled)[0][1])
+    proba = float(model.predict_proba(X_scaled)[0][1])
 
-        category = self.probability_to_category(proba)
+    category = self.probability_to_category(proba)
 
-        return (
-            category,
-            proba,
-            row.iloc[0].to_dict()
-        )
+    return (
+        category,
+        proba,
+        row.iloc[0].to_dict()
+    )
 
     def predict_kidney(self, age: int, blood: dict) -> tuple[str, float, dict]:
         artifact = self._load("ckd")
@@ -123,18 +123,31 @@ class MLService:
         category = self.probability_to_category(proba)
         return category, proba, row
 
-    def get_feature_importance(self, model_name: str) -> dict[str, float]:
+   def get_feature_importance(self, model_name: str) -> dict[str, float]:
+
+        if model_name == "anemia":
+            return {
+                "Hemoglobin": 1.0,
+                "RBC": 1.0,
+                "PCV": 1.0,
+                "MCV": 1.0,
+                "MCH": 1.0,
+                "MCHC": 1.0,
+            }
+
         artifact = self._load(model_name)
         model = artifact["model"]
         features = artifact["features"]
         labels = artifact.get("feature_labels", {})
+
         importances = getattr(model, "feature_importances_", None)
+
         if importances is None:
             return {labels.get(f, f): 1.0 for f in features}
+
         return {
             labels.get(f, f): float(imp)
             for f, imp in zip(features, importances)
         }
-
 
 ml_service = MLService()
