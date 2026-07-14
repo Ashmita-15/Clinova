@@ -58,43 +58,35 @@ class MLService:
             return "Medium"
         return "High"
 
-    def predict_anemia(self, gender: str, blood: dict) -> tuple[str, float, dict]:
-    # Load model artifact and scaler
-        artifact = self._load("anemia")
+    def predict_anemia(self,gender: str,age: int,blood: dict) -> tuple[str, float, dict]:
+
+        model = self._load("anemia")
         scaler = self._load_scaler("anemia")
 
-        # Encode gender
         gender_val = 1 if gender.lower() in ("male", "m") else 0
 
-        # Build input row
-        row = {
-            "GENDER": gender_val,
-            "HGB": blood["hemoglobin"],
+        row = pd.DataFrame([{
+            "Gender": gender_val,
+            "Age": age,
+            "HGB(Hemoglobin)": blood["hemoglobin"],
             "RBC": blood["rbc"],
-            "HCT": blood["hematocrit"],
+            "PCV/HCT": blood["pcv"],
             "MCV": blood["mcv"],
             "MCH": blood["mch"],
             "MCHC": blood["mchc"],
-            "RDW": blood["rdw"],
-        }
+        }])
 
-        # Create DataFrame
-        X = pd.DataFrame([row])
+        X_scaled = scaler.transform(row)
 
-        # Ensure feature order matches training
-        X = X[artifact["features"]]
-
-        # Scale features
-        X_scaled = scaler.transform(X)
-
-        # Predict
-        model = artifact["model"]
         proba = float(model.predict_proba(X_scaled)[0][1])
 
-        # Convert probability to category
         category = self.probability_to_category(proba)
 
-        return category, proba, row
+        return (
+            category,
+            proba,
+            row.iloc[0].to_dict()
+        )
 
     def predict_kidney(self, age: int, blood: dict) -> tuple[str, float, dict]:
         artifact = self._load("ckd")

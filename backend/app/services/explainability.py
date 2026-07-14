@@ -5,9 +5,26 @@ ANEMIA_THRESHOLDS = {
         "low": lambda v, g: v < (13.0 if g.lower() == "male" else 12.0),
         "message_low": "Low Hemoglobin",
     },
-    "MCV": {"low": lambda v, _: v < 80, "message_low": "Low MCV"},
-    "MCH": {"low": lambda v, _: v < 27, "message_low": "Low MCH"},
-    "MCHC": {"low": lambda v, _: v < 32, "message_low": "Low MCHC"},
+    "RBC": {
+        "low": lambda v, g: v < (4.5 if g.lower() == "male" else 4.0),
+        "message_low": "Low RBC Count",
+    },
+    "PCV": {
+        "low": lambda v, g: v < (41 if g.lower() == "male" else 36),
+        "message_low": "Low Packed Cell Volume (PCV)",
+    },
+    "MCV": {
+        "low": lambda v, _: v < 80,
+        "message_low": "Low MCV",
+    },
+    "MCH": {
+        "low": lambda v, _: v < 27,
+        "message_low": "Low MCH",
+    },
+    "MCHC": {
+        "low": lambda v, _: v < 32,
+        "message_low": "Low MCHC",
+    },
 }
 
 KIDNEY_THRESHOLDS = {
@@ -59,7 +76,9 @@ def _check_thresholds(
 
 def explain_anemia(gender: str, features: dict, importances: dict) -> list[str]:
     labeled = {
-        "Hemoglobin": features.get("Hemoglobin"),
+        "Hemoglobin": features.get("HGB(Hemoglobin)"),
+        "RBC": features.get("RBC"),
+        "PCV": features.get("PCV/HCT"),
         "MCV": features.get("MCV"),
         "MCH": features.get("MCH"),
         "MCHC": features.get("MCHC"),

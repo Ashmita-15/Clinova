@@ -12,15 +12,13 @@ class BloodParameters(BaseModel):
 
     rbc: float = Field(..., ge=0, le=10)
 
-    hematocrit: float = Field(..., ge=0, le=70)
+    pcv: float = Field(..., ge=0, le=70)
 
     mcv: float = Field(..., ge=0, le=150)
 
     mch: float = Field(..., ge=0, le=50)
 
     mchc: float = Field(..., ge=0, le=50)
-
-    rdw: float = Field(..., ge=0, le=40)
 
     wbc: float | None = Field(default=None, ge=0, le=50000)
 
@@ -44,15 +42,13 @@ class BloodParametersResponse(BaseModel):
 
     rbc: float
 
-    hematocrit: float
+    pcv: float
 
     mcv: float
 
     mch: float
 
     mchc: float
-
-    rdw: float
 
     wbc: float | None = None
 

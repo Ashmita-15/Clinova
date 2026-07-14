@@ -49,8 +49,7 @@ def _build_response(
             mch=db_assessment.mch,
             mchc=db_assessment.mchc,
             rbc=db_assessment.rbc,
-            hematocrit=db_assessment.hematocrit,
-            rdw=db_assessment.rdw,
+            pcv=db_assessment.pcv,
             wbc=db_assessment.wbc,
             platelets=db_assessment.platelets,
             blood_urea=db_assessment.blood_urea,
@@ -117,7 +116,7 @@ def analyze_assessment(request: AssessmentRequest, db: Session = Depends(get_db)
 
     try:
         anemia_cat, anemia_proba, anemia_feats = ml_service.predict_anemia(
-            patient.gender, blood
+            patient.gender, patient.age,blood
         )
         kidney_cat, kidney_proba, kidney_feats = ml_service.predict_kidney(
             patient.age, blood
@@ -145,11 +144,10 @@ def analyze_assessment(request: AssessmentRequest, db: Session = Depends(get_db)
         gender=patient.gender,
         hemoglobin=blood["hemoglobin"],
         rbc=blood["rbc"],
-        hematocrit=blood["hematocrit"],
+        pcv=blood["pcv"],
         mcv=blood["mcv"],
         mch=blood["mch"],
         mchc=blood["mchc"],
-        rdw=blood["rdw"],
         wbc=blood["wbc"],
         platelets=blood["platelets"],
         blood_urea=blood["blood_urea"],
@@ -280,8 +278,7 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
         "bmi": ["bmi"],
         "blood_pressure": ["bloodpressure", "bp", "blood_pressure"],
         "insulin": ["insulin"],
-        "hematocrit": ["hematocrit", "hct", "pcv"],
-        "rdw": ["rdw"],
+        "pcv": ["pcv", "hematocrit", "hct", "pcv/hct"],
     }
 
     mapped_columns = {}
@@ -292,7 +289,7 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
                 mapped_columns[target] = normalized_cols[norm_alias]
                 break
 
-    compulsory_keys = ["name","age","gender","hemoglobin","rbc","hematocrit","mcv","mch","mchc","rdw",]
+    compulsory_keys = ["name","age","gender","hemoglobin","rbc","pcv","mcv","mch","mchc",]
     missing_compulsory = [k for k in compulsory_keys if k not in mapped_columns]
     if missing_compulsory:
         raise HTTPException(
@@ -327,11 +324,11 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
            # Compulsory blood parameters
             hemoglobin = float(row[mapped_columns["hemoglobin"]])
             rbc = float(row[mapped_columns["rbc"]])
-            hematocrit = float(row[mapped_columns["hematocrit"]])
+            pcv = float(row[mapped_columns["pcv"]])
             mcv = float(row[mapped_columns["mcv"]])
             mch = float(row[mapped_columns["mch"]])
             mchc = float(row[mapped_columns["mchc"]])
-            rdw = float(row[mapped_columns["rdw"]])
+
 
             if not (0 <= hemoglobin <= 25):
                 raise ValueError(f"Hemoglobin value {hemoglobin} out of range [0, 25]")
@@ -339,8 +336,8 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
             if not (0 <= rbc <= 10):
                 raise ValueError(f"RBC value {rbc} out of range [0, 10]")
 
-            if not (0 <= hematocrit <= 70):
-                raise ValueError(f"Hematocrit value {hematocrit} out of range [0, 70]")
+            if not (0 <= pcv <= 70):
+                raise ValueError(f"PCV value {PCV} out of range [0, 70]")
 
             if not (0 <= mcv <= 150):
                 raise ValueError(f"MCV value {mcv} out of range [0, 150]")
@@ -351,8 +348,7 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
             if not (0 <= mchc <= 50):
                 raise ValueError(f"MCHC value {mchc} out of range [0, 50]")
 
-            if not (0 <= rdw <= 40):
-                raise ValueError(f"RDW value {rdw} out of range [0, 40]")
+            
 
             # Optional blood parameters helper
             def get_optional_float(key, min_val, max_val):
@@ -384,11 +380,10 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
         blood_dict = {
             "hemoglobin": hemoglobin,
             "rbc": rbc,
-            "hematocrit": hematocrit,
+            "pcv": pcv,
             "mcv": mcv,
             "mch": mch,
             "mchc": mchc,
-            "rdw": rdw,
             "wbc": wbc,
             "platelets": platelets,
             "blood_urea": blood_urea,
@@ -402,7 +397,7 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
         # Run predictions
         try:
             anemia_cat, anemia_proba, anemia_feats = ml_service.predict_anemia(
-                gender, blood_dict
+                gender, age,blood_dict
             )
             kidney_cat, kidney_proba, kidney_feats = ml_service.predict_kidney(
                 age, blood_dict
@@ -430,13 +425,12 @@ def analyze_bulk_assessments(file: UploadFile = File(...), db: Session = Depends
             gender=gender,
             hemoglobin=hemoglobin,
             rbc=rbc,
-            hematocrit=hematocrit,
+            pcv=pcv,
             wbc=wbc,
             platelets=platelets,
             mcv=mcv,
             mch=mch,
             mchc=mchc,
-            rdw=rdw,
             blood_urea=blood_urea,
             serum_creatinine=serum_creatinine,
             glucose=glucose,

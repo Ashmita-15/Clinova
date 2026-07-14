@@ -29,11 +29,10 @@ const initialPatient = { name: '', age: '', gender: 'Male' }
 const initialBlood = {
   hemoglobin: '',
   rbc: '',
-  hematocrit: '',
+  pcv: '',
   mcv: '',
   mch: '',
   mchc: '',
-  rdw: '',
   wbc: '',
   platelets: '',
   blood_urea: '',
@@ -125,15 +124,13 @@ export default function AssessmentForm() {
 
           rbc: parseFloat(blood.rbc),
           
-          hematocrit: parseFloat(blood.hematocrit),
+          pcv: parseFloat(blood.pcv),
           
           mcv: parseFloat(blood.mcv),
           
           mch: parseFloat(blood.mch),
           
           mchc: parseFloat(blood.mchc),
-          
-          rdw: parseFloat(blood.rdw),
           
           wbc: blood.wbc ? parseFloat(blood.wbc) : null,
           
@@ -219,7 +216,7 @@ export default function AssessmentForm() {
   }
 
   const downloadTemplateCSV = () => {
-    const headers = ["patient_name","age","gender","hemoglobin","rbc","hematocrit","mcv", "mch","mchc","rdw","wbc", "platelets", "blood_urea","serum_creatinine","glucose","bmi", "blood_pressure","insulin"]
+    const headers = ["patient_name","age","gender","hemoglobin","rbc","pcv","mcv", "mch","mchc","wbc", "platelets", "blood_urea","serum_creatinine","glucose","bmi", "blood_pressure","insulin"]
     const rows = [
       [
       "John Doe",
@@ -231,7 +228,6 @@ export default function AssessmentForm() {
       "89",
       "30",
       "33",
-      "13.5",
       "7500",
       "250000",
       "24",
@@ -252,7 +248,6 @@ export default function AssessmentForm() {
       "78",
       "24",
       "31",
-      "15.2",
       "6200",
       "280000",
       "18",
@@ -273,7 +268,6 @@ export default function AssessmentForm() {
       "92",
       "31",
       "34",
-      "12.8",
       "",
       "",
       "45",
@@ -487,8 +481,7 @@ export default function AssessmentForm() {
                       <Field label="MCV (fL)" name="mcv" value={blood.mcv} onChange={handleBlood} placeholder="90" />
                       <Field label="MCH (pg)" name="mch" value={blood.mch} onChange={handleBlood} placeholder="29" />
                       <Field label="MCHC (g/dL)" name="mchc" value={blood.mchc} onChange={handleBlood} placeholder="33" />
-                      <Field label="RDW (%)" name="rdw" value={blood.rdw} onChange={handleBlood} placeholder="13.5"/>
-                      <Field label="PCV(%)" name="hematocrit" value={blood.hematocrit} onChange={handleBlood} placeholder="42"/>
+                      <Field label="PCV (%)" name="pcv" value={blood.pcv} onChange={handleBlood} placeholder="42"/>
                     </div>
                   </div>
 
@@ -716,7 +709,7 @@ export default function AssessmentForm() {
                           Required Columns
                         </span>
                         <p className="text-[11px] font-mono text-slate-600 mt-1">
-                          patient_name, age, gender, hemoglobin, rbc, hematocrit, mcv, mch, mchc, rdw
+                          patient_name, age, gender, hemoglobin, rbc, pcv, mcv, mch, mchc, 
                         </p>
                       </div>
                       <div>
