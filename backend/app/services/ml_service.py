@@ -27,6 +27,7 @@ class MLService:
         self.models_path = _resolve_models_path()
         self._artifacts: dict = {}
         self._scalers: dict = {}
+        self._imputers: dict = {}
 
     def _load(self, name: str) -> dict:
         if name not in self._artifacts:
@@ -49,6 +50,18 @@ class MLService:
             self._scalers[name] = joblib.load(path)
 
         return self._scalers[name]
+    
+    def _load_imputer(self, name: str):
+        if name not in self._imputers:
+
+            path = os.path.join(
+                self.models_path,
+                f"{name}_imputer.pkl"
+            )
+
+            self._imputers[name] = joblib.load(path)
+
+        return self._imputers[name]
 
     @staticmethod
     def probability_to_category(proba: float) -> str:
@@ -89,21 +102,46 @@ class MLService:
         )
 
     def predict_kidney(self, age: int, blood: dict) -> tuple[str, float, dict]:
-        artifact = self._load("ckd")
-        bu_val = blood.get("blood_urea") if blood.get("blood_urea") is not None else 20.0
-        sc_val = blood.get("serum_creatinine") if blood.get("serum_creatinine") is not None else 1.0
-        bp_val = blood.get("blood_pressure") if blood.get("blood_pressure") is not None else 120.0
-        row = {
-            "bu": bu_val,
-            "sc": sc_val,
-            "hemo": blood["hemoglobin"],
-            "bp": bp_val,
+
+        model = self._load("ckd")
+        imputer = self._load_imputer("ckd")
+
+        row = pd.DataFrame([{
             "age": age,
-        }
-        X = pd.DataFrame([row])[artifact["features"]]
-        proba = float(artifact["model"].predict_proba(X)[0][1])
+            "hemo": blood["hemoglobin"],
+            "rc": blood["rbc"],
+            "pcv": blood["pcv"],
+
+            "bp": blood.get("blood_pressure"),
+            "bu": blood.get("blood_urea"),
+            "sc": blood.get("serum_creatinine"),
+        }])
+        feature_order = [
+            "age",
+            "hemo",
+            "rc",
+            "pcv",
+            "bp",
+            "bu",
+            "sc"
+        ]
+
+        row = row[feature_order]
+
+        X = pd.DataFrame(
+            imputer.transform(row),
+            columns=row.columns
+        )
+
+        proba = float(model.predict_proba(X)[0][1])
+
         category = self.probability_to_category(proba)
-        return category, proba, row
+
+        return (
+            category,
+            proba,
+            row.iloc[0].to_dict()
+        )
 
     def predict_diabetes(self, age: int, blood: dict) -> tuple[str, float, dict]:
         artifact = self._load("diabetes")
@@ -135,19 +173,45 @@ class MLService:
                 "MCHC": 1.0,
             }
 
-        artifact = self._load(model_name)
-        model = artifact["model"]
-        features = artifact["features"]
-        labels = artifact.get("feature_labels", {})
+        elif model_name == "ckd":
 
-        importances = getattr(model, "feature_importances_", None)
+            model = self._load("ckd")
 
-        if importances is None:
-            return {labels.get(f, f): 1.0 for f in features}
+            features = [
+                "age",
+                "hemo",
+                "rc",
+                "pcv",
+                "bp",
+                "bu",
+                "sc"
+            ]
 
-        return {
-            labels.get(f, f): float(imp)
-            for f, imp in zip(features, importances)
-        }
+            importances = model.feature_importances_
+
+            return {
+                feature: float(importance)
+                for feature, importance in zip(features, importances)
+            }
+
+        elif model_name == "diabetes":
+
+            artifact = self._load("diabetes")
+
+            model = artifact["model"]
+            features = artifact["features"]
+            labels = artifact.get("feature_labels", {})
+
+            importances = getattr(model, "feature_importances_", None)
+
+            if importances is None:
+                return {labels.get(f, f): 1.0 for f in features}
+
+            return {
+                labels.get(f, f): float(imp)
+                for f, imp in zip(features, importances)
+            }
+
+        return {}
 
 ml_service = MLService()
