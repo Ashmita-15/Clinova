@@ -130,7 +130,7 @@ def analyze_assessment(request: AssessmentRequest, db: Session = Depends(get_db)
     kidney_imp = ml_service.get_feature_importance("ckd")
     diabetes_imp = ml_service.get_feature_importance("diabetes")
 
-    anemia_factors = explain_anemia(patient.gender, anemia_feats, anemia_imp)
+    anemia_factors = explain_anemia(patient.gender, anemia_feats, {})
     kidney_factors = explain_kidney(patient.age, kidney_feats, kidney_imp)
     diabetes_factors = explain_diabetes(patient.age, diabetes_feats, diabetes_imp)
 
