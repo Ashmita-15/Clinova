@@ -102,6 +102,9 @@ class MLService:
         )
 
     def predict_kidney(self, age: int, blood: dict) -> tuple[str, float, dict]:
+        print("=" * 60)
+        print("INSIDE PREDICT_KIDNEY")
+        print("=" * 60)
 
         model = self._load("ckd")
         imputer = self._load_imputer("ckd")
