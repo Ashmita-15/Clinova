@@ -60,33 +60,33 @@ class MLService:
 
     def predict_anemia(self,gender: str,age: int,blood: dict) -> tuple[str, float, dict]:
 
-    model = self._load("anemia")
-    scaler = self._load_scaler("anemia")
+        model = self._load("anemia")
+        scaler = self._load_scaler("anemia")
 
-    gender_val = 1 if gender.lower() in ("male", "m") else 0
+        gender_val = 1 if gender.lower() in ("male", "m") else 0
 
-    row = pd.DataFrame([{
-        "Gender": gender_val,
-        "Age": age,
-        "HGB(Hemoglobin)": blood["hemoglobin"],
-        "RBC": blood["rbc"],
-        "PCV/HCT": blood["pcv"],
-        "MCV": blood["mcv"],
-        "MCH": blood["mch"],
-        "MCHC": blood["mchc"],
-    }])
+        row = pd.DataFrame([{
+            "Gender": gender_val,
+            "Age": age,
+            "HGB(Hemoglobin)": blood["hemoglobin"],
+            "RBC": blood["rbc"],
+            "PCV/HCT": blood["pcv"],
+            "MCV": blood["mcv"],
+            "MCH": blood["mch"],
+            "MCHC": blood["mchc"],
+        }])
 
-    X_scaled = scaler.transform(row)
+        X_scaled = scaler.transform(row)
 
-    proba = float(model.predict_proba(X_scaled)[0][1])
+        proba = float(model.predict_proba(X_scaled)[0][1])
 
-    category = self.probability_to_category(proba)
+        category = self.probability_to_category(proba)
 
-    return (
-        category,
-        proba,
-        row.iloc[0].to_dict()
-    )
+        return (
+            category,
+            proba,
+            row.iloc[0].to_dict()
+        )
 
     def predict_kidney(self, age: int, blood: dict) -> tuple[str, float, dict]:
         artifact = self._load("ckd")
