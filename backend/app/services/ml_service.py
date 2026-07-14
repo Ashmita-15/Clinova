@@ -123,7 +123,7 @@ class MLService:
         category = self.probability_to_category(proba)
         return category, proba, row
 
-   def get_feature_importance(self, model_name: str) -> dict[str, float]:
+    def get_feature_importance(self, model_name: str) -> dict[str, float]:
 
         if model_name == "anemia":
             return {
