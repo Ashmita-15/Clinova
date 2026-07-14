@@ -142,6 +142,14 @@ class MLService:
             proba,
             row.iloc[0].to_dict()
         )
+        print(model)
+        print("Original input:")
+        print(row)
+
+        print("After imputation:")
+        print(X)
+
+        print("Probability:", proba)
 
     def predict_diabetes(self, age: int, blood: dict) -> tuple[str, float, dict]:
         artifact = self._load("diabetes")
